@@ -6,13 +6,14 @@ import { AuthSessionProvider } from "@/components/providers/session-provider"
 import { SocketProvider } from "@/components/providers/socket-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+// Import the SocketStatus component
+import { SocketStatus } from "@/components/debug/socket-status"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "ChatApp - Real-time Chat Application",
   description: "A modern real-time chat application with groups and rooms",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

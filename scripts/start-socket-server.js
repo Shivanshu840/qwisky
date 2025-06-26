@@ -17,6 +17,7 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id)
 
+  // Group chat events
   socket.on("join-room", (roomId) => {
     socket.join(roomId)
     console.log(`User ${socket.id} joined room ${roomId}`)
@@ -40,6 +41,32 @@ io.on("connection", (socket) => {
 
   socket.on("stop-typing", (data) => {
     socket.to(data.roomId).emit("user-stop-typing", data)
+  })
+
+  // Direct message events
+  socket.on("send-direct-message", (data) => {
+    console.log("Broadcasting direct message to room:", data.roomId)
+    // Broadcast the message to the specific room
+    socket.to(data.roomId).emit("receive-direct-message", data)
+  })
+
+  socket.on("typing-direct", (data) => {
+    console.log("User typing in direct chat:", data.userId, "in room:", data.roomId)
+    socket.to(data.roomId).emit("user-typing-direct", data)
+  })
+
+  socket.on("stop-typing-direct", (data) => {
+    console.log("User stopped typing in direct chat:", data.userId, "in room:", data.roomId)
+    socket.to(data.roomId).emit("user-stop-typing-direct", data)
+  })
+
+  // User status events
+  socket.on("user-online", (userId) => {
+    socket.broadcast.emit("user-status-change", { userId, isOnline: true })
+  })
+
+  socket.on("user-offline", (userId) => {
+    socket.broadcast.emit("user-status-change", { userId, isOnline: false })
   })
 
   socket.on("disconnect", () => {

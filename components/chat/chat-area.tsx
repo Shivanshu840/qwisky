@@ -55,27 +55,35 @@ export function ChatArea({ roomId, roomName }: ChatAreaProps) {
 
   useEffect(() => {
     if (socket) {
-      socket.on("receive-message", (message: Message) => {
-        setMessages((prev) => [...prev, message])
-      })
+      // Function to handle incoming messages
+      const handleReceiveMessage = (message: Message) => {
+        console.log("Received group message:", message)
+        if (message.roomId === roomId) {
+          setMessages((prev) => [...prev, message])
+        }
+      }
 
-      socket.on("user-typing", (data: { userId: string; userName: string }) => {
-        if (data.userId !== session?.user?.id) {
+      socket.on("receive-message", handleReceiveMessage)
+
+      socket.on("user-typing", (data: { userId: string; userName: string; roomId: string }) => {
+        if (data.userId !== session?.user?.id && data.roomId === roomId) {
           setTypingUsers((prev) => [...prev.filter((id) => id !== data.userId), data.userName])
         }
       })
 
-      socket.on("user-stop-typing", (data: { userId: string }) => {
-        setTypingUsers((prev) => prev.filter((name) => name !== data.userId))
+      socket.on("user-stop-typing", (data: { userId: string; roomId: string }) => {
+        if (data.roomId === roomId) {
+          setTypingUsers((prev) => prev.filter((name) => name !== data.userId))
+        }
       })
 
       return () => {
-        socket.off("receive-message")
+        socket.off("receive-message", handleReceiveMessage)
         socket.off("user-typing")
         socket.off("user-stop-typing")
       }
     }
-  }, [socket, session?.user?.id])
+  }, [socket, session?.user?.id, roomId])
 
   useEffect(() => {
     scrollToBottom()

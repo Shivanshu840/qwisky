@@ -23,42 +23,39 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    // Initialize Socket.IO server first
-    fetch("/api/socketio")
-      .then(() => {
-        console.log("Socket.IO server initialized")
+    // Connect directly to the Socket.IO server running on port 3001
+    const socketInstance = io("http://localhost:3001", {
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      autoConnect: true,
+    })
 
-        // Connect to Socket.IO server
-        const socketInstance = io(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001", {
-          transports: ["websocket", "polling"],
-          upgrade: true,
-          rememberUpgrade: true,
-        })
+    socketInstance.on("connect", () => {
+      console.log("Socket connected:", socketInstance.id)
+      setIsConnected(true)
+    })
 
-        socketInstance.on("connect", () => {
-          console.log("Socket connected:", socketInstance.id)
-          setIsConnected(true)
-        })
+    socketInstance.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason)
+      setIsConnected(false)
+    })
 
-        socketInstance.on("disconnect", (reason) => {
-          console.log("Socket disconnected:", reason)
-          setIsConnected(false)
-        })
+    socketInstance.on("connect_error", (error) => {
+      console.error("Socket connection error:", error)
+      setIsConnected(false)
+    })
 
-        socketInstance.on("connect_error", (error) => {
-          console.error("Socket connection error:", error)
-          setIsConnected(false)
-        })
+    socketInstance.io.on("reconnect", () => {
+      console.log("Socket reconnected")
+      setIsConnected(true)
+    })
 
-        setSocket(socketInstance)
+    setSocket(socketInstance)
 
-        return () => {
-          socketInstance.disconnect()
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to initialize Socket.IO:", error)
-      })
+    return () => {
+      socketInstance.disconnect()
+    }
   }, [])
 
   return <SocketContext.Provider value={{ socket, isConnected }}>{children}</SocketContext.Provider>
