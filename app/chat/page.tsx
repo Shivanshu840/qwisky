@@ -9,11 +9,11 @@ import { DirectChatArea } from "@/components/chat/direct-chat-area"
 import { FriendsList } from "@/components/chat/friends-list"
 import { InvitationsPanel } from "@/components/chat/invitations-panel"
 import { EnhancedUserSearch } from "@/components/chat/enhanced-user-search"
+import { ThemeSwitcher } from "@/components/ui/theme-switcher"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { signOut } from "next-auth/react"
-import { LogOut, MessageSquare, Users, Mail, Search } from "lucide-react"
+import { LogOut, MessageSquare, Users, Mail, Search, Settings } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ChatPage() {
@@ -65,14 +65,19 @@ export default function ChatPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <MessageSquare className="h-6 w-6 text-white" />
+          </div>
+          <div className="text-lg font-medium text-gray-600 dark:text-gray-300">Loading Qwisky...</div>
+        </div>
       </div>
     )
   }
 
   if (status === "unauthenticated") {
-    redirect("/auth/signin")
+    redirect("/")
   }
 
   const handleRoomSelect = (roomId: string, roomName: string) => {
@@ -90,28 +95,28 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="border-b bg-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <MessageSquare className="h-6 w-6 text-blue-600" />
-          <h1 className="text-xl font-semibold">ChatApp</h1>
+      <header className="border-b bg-white dark:bg-gray-800 px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center space-x-3">
+          <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <MessageSquare className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Qwisky
+          </span>
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={session?.user?.image || ""} />
-              <AvatarFallback>{session?.user?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">{session?.user?.name}</span>
-          </div>
-
+          <ThemeSwitcher />
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Settings className="h-4 w-4" />
+          </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-            className="bg-white text-black"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -122,28 +127,40 @@ export default function ChatPage() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
-        <div className="w-80 bg-gray-50 border-r flex flex-col">
+        <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <div className="border-b bg-white p-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="groups" className="text-xs">
+            <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+              <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-700">
+                <TabsTrigger
+                  value="groups"
+                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600"
+                >
                   <Users className="h-4 w-4 mr-1" />
                   Groups
                 </TabsTrigger>
-                <TabsTrigger value="friends" className="text-xs">
+                <TabsTrigger
+                  value="friends"
+                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600"
+                >
                   <MessageSquare className="h-4 w-4 mr-1" />
                   Friends
                 </TabsTrigger>
-                <TabsTrigger value="invitations" className="text-xs relative">
+                <TabsTrigger
+                  value="invitations"
+                  className="text-xs relative data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600"
+                >
                   <Mail className="h-4 w-4 mr-1" />
                   Requests
                   {pendingInvitations > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs bg-red-500">
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs bg-red-500 text-white">
                       {pendingInvitations}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="search" className="text-xs">
+                <TabsTrigger
+                  value="search"
+                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600"
+                >
                   <Search className="h-4 w-4 mr-1" />
                   Find
                 </TabsTrigger>
@@ -184,7 +201,7 @@ export default function ChatPage() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
           {selectedRoom ? (
             <ChatArea roomId={selectedRoom.id} roomName={selectedRoom.name} />
           ) : selectedFriend ? (
@@ -195,12 +212,16 @@ export default function ChatPage() {
               isOnline={selectedFriend.isOnline}
             />
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
-              <div className="text-center">
-                <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Welcome to ChatApp</h3>
-                <p className="text-gray-500 mb-4">Connect with friends and join group conversations</p>
-                <div className="space-y-2 text-sm text-gray-400">
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="h-20 w-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <MessageSquare className="h-10 w-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Welcome to Qwisky</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  Connect with friends and join group conversations to get started.
+                </p>
+                <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
                   <p>• Select a room from Groups to join group chats</p>
                   <p>• Choose a friend to start direct messaging</p>
                   <p>• Check Requests for pending friend invitations</p>

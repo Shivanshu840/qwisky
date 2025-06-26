@@ -6,14 +6,22 @@ import { AuthSessionProvider } from "@/components/providers/session-provider"
 import { SocketProvider } from "@/components/providers/socket-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-// Import the SocketStatus component
-import { SocketStatus } from "@/components/debug/socket-status"
+
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ChatApp - Real-time Chat Application",
-  description: "A modern real-time chat application with groups and rooms",
+  title: "Qwisky - Real-time Chat Application",
+  description: "Connect instantly, chat seamlessly with Qwisky's powerful communication platform",
+  keywords: ["chat", "messaging", "real-time", "communication", "qwisky"],
+  authors: [{ name: "Qwisky Team" }],
+  creator: "Qwisky",
+  publisher: "Qwisky",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
 }
 
 export default function RootLayout({
@@ -22,9 +30,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <AuthSessionProvider>
             <SocketProvider>{children}</SocketProvider>
           </AuthSessionProvider>

@@ -8,9 +8,11 @@ import { useSocket } from "@/components/providers/socket-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
+import { MessageBubble } from "@/components/chat/message-bubble"
+import { EmojiPicker } from "@/components/ui/emoji-picker"
+import { VoiceRecorder } from "@/components/ui/voice-recorder"
+import { Paperclip } from "lucide-react"
 
 interface Message {
   id: string
@@ -194,35 +196,40 @@ export function ChatArea({ roomId, roomName }: ChatAreaProps) {
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="border-b p-4 bg-card">
-        <h3 className="font-semibold text-lg text-card-foreground">{roomName}</h3>
+      <div className="border-b border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800 shadow-sm">
+        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{roomName}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Group chat</p>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className="flex space-x-3 chat-message">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={message.user.image || ""} />
-                <AvatarFallback>{message.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-medium text-sm">{message.user.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
-                  </span>
-                </div>
-                <p className="text-sm text-foreground">{message.content}</p>
-              </div>
-            </div>
-          ))}
+      <ScrollArea className="flex-1 p-4 bg-gray-50 dark:bg-gray-900">
+        <div className="space-y-1">
+          {messages.map((message, index) => {
+            const isOwn = message.user.id === session?.user?.id
+            const showAvatar = !isOwn && (index === 0 || messages[index - 1]?.user.id !== message.user.id)
+
+            return (
+              <MessageBubble key={message.id} message={message} isOwn={isOwn} showAvatar={showAvatar} isRead={true} />
+            )
+          })}
 
           {typingUsers.length > 0 && (
-            <div className="flex space-x-3">
-              <div className="h-8 w-8"></div>
-              <div className="text-sm text-muted-foreground italic">
-                {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+            <div className="flex items-center space-x-3 px-4 py-2">
+              <div className="h-8 w-8" />
+              <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-2xl px-4 py-2 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  />
+                </div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                </span>
               </div>
             </div>
           )}
@@ -231,20 +238,45 @@ export function ChatArea({ roomId, roomName }: ChatAreaProps) {
         </div>
       </ScrollArea>
 
-      <div className="border-t p-4 bg-card">
-        <div className="flex space-x-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => {
-              setNewMessage(e.target.value)
-              handleTyping()
-            }}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
-            className="flex-1"
-          />
-          <Button onClick={sendMessage} disabled={!newMessage.trim()}>
-            <Send className="h-4 w-4" />
+      <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+        <div className="flex items-end space-x-3">
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3 border border-gray-200 dark:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-400 transition-colors">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-200 dark:hover:bg-gray-600">
+                <Paperclip className="h-4 w-4" />
+              </Button>
+
+              <Input
+                value={newMessage}
+                onChange={(e) => {
+                  setNewMessage(e.target.value)
+                  handleTyping()
+                }}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+              />
+
+              <div className="flex items-center space-x-1">
+                <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+                <VoiceRecorder
+                  onVoiceMessage={(blob, duration) => {
+                    // Handle voice message for group chat
+                    const voiceMessage = `🎤 Voice message (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`
+                    setNewMessage(voiceMessage)
+                    sendMessage()
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={sendMessage}
+            disabled={!newMessage.trim()}
+            className="h-12 w-12 p-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <Send className="h-5 w-5" />
           </Button>
         </div>
       </div>
